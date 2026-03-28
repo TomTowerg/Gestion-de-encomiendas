@@ -6,9 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
 }
 
 // User model with role support (CONSERJE or RESIDENTE)
@@ -22,8 +20,9 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts Account[]
-  sessions Session[]
+  accounts           Account[]
+  sessions           Session[]
+  registeredPackages Package[]
 }
 
 enum UserRole {
@@ -32,18 +31,18 @@ enum UserRole {
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?  @db.Text
-  session_state      String?
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -68,4 +67,43 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+// ─── Business Models ────────────────────────────────────────────────────────
+
+model Apartment {
+  id        String   @id @default(cuid())
+  number    String
+  tower     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  packages Package[]
+
+  @@unique([number, tower])
+}
+
+model Package {
+  id           String        @id @default(cuid())
+  trackingCode String        @unique
+  status       PackageStatus @default(PENDING)
+  description  String?
+  receivedAt   DateTime      @default(now())
+  deliveredAt  DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  apartmentId String
+  apartment   Apartment @relation(fields: [apartmentId], references: [id])
+
+  registeredById String
+  registeredBy   User   @relation(fields: [registeredById], references: [id])
+
+  @@index([apartmentId])
+  @@index([registeredById])
+}
+
+enum PackageStatus {
+  PENDING
+  DELIVERED
 }
