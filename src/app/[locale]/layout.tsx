@@ -47,10 +47,10 @@ export default async function RootLayout({
       lang={locale}
       className={`${syne.variable} ${inter.variable} h-full antialiased`}
     >
-      <body className="min-h-screen flex flex-col bg-[#080810] text-[#f1f0ff] antialiased">
+      <body className="min-h-screen flex flex-col bg-[#0f0820] text-[#f5f0ff] antialiased overscroll-none">
         <NextIntlClientProvider messages={messages}>
           <Navbar />
-          <main className="flex flex-col flex-1 pt-24">{children}</main>
+          <main className="flex flex-col flex-1">{children}</main>
         </NextIntlClientProvider>
       </body>
     </html>

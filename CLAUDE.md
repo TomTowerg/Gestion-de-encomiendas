@@ -42,9 +42,9 @@ Sistema de gestión eficiente de paquetes y correspondencia en edificios residen
 - **Sprint 1 (24–31 mar)**: Setup del proyecto, SSO con 2 roles, base responsive, i18n
   - Tarea 1: Setup inicial ✓
   - **Tarea 2: [Auth] SSO login with NextAuth + Google provider** ✅ COMPLETADA (25 mar)
-  - Tarea 3: i18n setup (pendiente)
-  - Tarea 4: Responsive design audit (pendiente)
-- Sprint 2 (31 mar–7 abr): Registro de encomiendas, base de datos, notificaciones
+  - Tarea 3: i18n setup ✅ COMPLETADA (07 abr)
+  - Tarea 4: Responsive design audit ✅ COMPLETADA (07 abr)
+- Sprint 2 (31 mar–7 abr): Registro de encomiendas, base de datos, notificaciones [/] EN PROGRESO
 - Sprint 3 (7–14 abr): Generación y escaneo QR, verificación de retiro
 - Sprint 4 (14–21 abr): Dashboard conserje, filtros, estadísticas
 - Sprint 5 (21–28 abr): Deploy en la nube, CI/CD, pruebas E2E

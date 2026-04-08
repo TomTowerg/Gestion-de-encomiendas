@@ -29,7 +29,7 @@ export default function ResidentDashboard() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 pt-[68px]">
       {/* Header */}
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
@@ -190,6 +190,6 @@ export default function ResidentDashboard() {
           </ul>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

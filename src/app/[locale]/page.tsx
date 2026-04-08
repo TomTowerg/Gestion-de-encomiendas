@@ -2,200 +2,480 @@
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect, CSSProperties } from "react";
 import {
-  PackageCheck,
-  QrCode,
+  Check,
+  Package,
+  Smartphone,
+  ClipboardList,
+  Building2,
+  ScanLine,
   Bell,
-  Clock,
-  Cloud,
-  LayoutDashboard,
+  QrCode,
+  ShieldCheck,
+  BarChart3,
+  ArrowRight,
 } from "lucide-react";
 
-// ── Spotlight card ────────────────────────────────────────────────────────────
+/* ─────────────────────────────────────────────────
+   Hook: dispara una vez cuando el elemento entra
+   al viewport. Se desconecta tras el primer trigger.
+───────────────────────────────────────────────── */
+function useInView(threshold = 0.12) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
 
-interface BentoCardProps {
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  badge?: string;
-  className?: string;
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          observer.disconnect();
+        }
+      },
+      { threshold }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [threshold]);
+
+  return { ref, inView };
 }
 
-function SpotlightCard({
-  title,
-  description,
-  icon,
-  badge,
-  className = "",
-}: BentoCardProps) {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const [spot, setSpot] = useState({ x: 0, y: 0, visible: false });
-
-  function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
-    const rect = cardRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    setSpot({ x: e.clientX - rect.left, y: e.clientY - rect.top, visible: true });
-  }
-
-  function handleMouseLeave() {
-    setSpot((s) => ({ ...s, visible: false }));
-  }
-
-  return (
-    <div
-      ref={cardRef}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      className={`relative overflow-hidden bg-white/[0.03] border border-white/[0.06] rounded-2xl p-5 hover:bg-white/[0.06] hover:scale-[1.02] transition-all duration-300 cursor-pointer ${className}`}
-    >
-      {/* Spotlight overlay — inline style intentional (dynamic gradient) */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          opacity: spot.visible ? 1 : 0,
-          transition: "opacity 0.2s ease",
-          background: `radial-gradient(200px at ${spot.x}px ${spot.y}px, rgba(99,102,241,0.08), transparent)`,
-        }}
-      />
-
-      <div className="relative z-10 flex flex-col h-full">
-        {badge && (
-          <span className="self-start mb-3 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wider uppercase bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-            {badge}
-          </span>
-        )}
-        <div className="text-indigo-400 mb-3">{icon}</div>
-        <h3
-          className="text-sm font-semibold text-[#f1f0ff] mb-1.5"
-          style={{ fontFamily: "var(--font-syne)" }}
-        >
-          {title}
-        </h3>
-        <p className="text-xs text-[#6b6a8a] leading-relaxed">{description}</p>
-      </div>
-    </div>
-  );
+/* Helper: estilos de entrada escalonada ──────── */
+function fadeUp(
+  active: boolean,
+  delay = 0,
+  extra?: CSSProperties
+): CSSProperties {
+  return {
+    opacity: active ? 1 : 0,
+    transform: active ? "translateY(0)" : "translateY(28px)",
+    transition: "opacity 0.7s ease, transform 0.7s ease",
+    transitionDelay: `${delay}ms`,
+    ...extra,
+  };
 }
 
-// ── Bento card data ───────────────────────────────────────────────────────────
-
-const BENTO_CARDS: (BentoCardProps & { gridClass: string, titleKey: any, descKey: any, badgeKey?: any })[] = [
-  {
-    title: "", titleKey: "card1Title",
-    description: "", descKey: "card1Desc",
-    icon: <PackageCheck className="w-6 h-6" strokeWidth={1.5} />,
-    badgeKey: "card1Badge",
-    gridClass: "md:col-span-2 md:row-span-2",
-  },
-  {
-    title: "", titleKey: "card2Title",
-    description: "", descKey: "card2Desc",
-    icon: <QrCode className="w-5 h-5" strokeWidth={1.5} />,
-    gridClass: "md:col-span-2",
-  },
-  {
-    title: "", titleKey: "card3Title",
-    description: "", descKey: "card3Desc",
-    icon: <Bell className="w-5 h-5" strokeWidth={1.5} />,
-    gridClass: "md:col-span-1",
-  },
-  {
-    title: "", titleKey: "card4Title",
-    description: "", descKey: "card4Desc",
-    icon: <Clock className="w-5 h-5" strokeWidth={1.5} />,
-    gridClass: "md:col-span-1",
-  },
-  {
-    title: "", titleKey: "card5Title",
-    description: "", descKey: "card5Desc",
-    icon: <Cloud className="w-5 h-5" strokeWidth={1.5} />,
-    badgeKey: "card5Badge",
-    gridClass: "md:col-span-2",
-  },
-  {
-    title: "", titleKey: "card6Title",
-    description: "", descKey: "card6Desc",
-    icon: <LayoutDashboard className="w-5 h-5" strokeWidth={1.5} />,
-    gridClass: "md:col-span-2",
-  },
-];
-
-// ── Page ──────────────────────────────────────────────────────────────────────
+function fadeRight(active: boolean, delay = 0): CSSProperties {
+  return {
+    opacity: active ? 1 : 0,
+    transform: active ? "translateX(0)" : "translateX(24px)",
+    transition: "opacity 0.8s ease, transform 0.8s ease",
+    transitionDelay: `${delay}ms`,
+  };
+}
 
 export default function Home() {
-  const t = useTranslations("Index");
+  const t = useTranslations("Home");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
+
+  /* Refs de sección para scroll-trigger */
+  const stats   = useInView();
+  const how     = useInView();
+  const roles   = useInView();
+  const benefits= useInView();
+  const cta     = useInView();
+
+  /* Datos desde i18n */
+  const STATS = [
+    { value: t("stat1Value"), label: t("stat1Label") },
+    { value: t("stat2Value"), label: t("stat2Label") },
+    { value: t("stat3Value"), label: t("stat3Label") },
+  ];
+
+  const STEPS = [
+    { number: "01", icon: ScanLine, title: t("step1Title"), desc: t("step1Desc") },
+    { number: "02", icon: Bell,     title: t("step2Title"), desc: t("step2Desc") },
+    { number: "03", icon: QrCode,   title: t("step3Title"), desc: t("step3Desc") },
+  ];
+
+  const ROLES = [
+    {
+      role: "CONSERJE",
+      accent: "#f59e0b",
+      icon: Package,
+      label: t("conciergeLabel"),
+      headline: t("conciergeHeadline"),
+      features: [t("conciergeF1"), t("conciergeF2"), t("conciergeF3"), t("conciergeF4")],
+      cta: t("conciergeCta"),
+    },
+    {
+      role: "RESIDENTE",
+      accent: "#fcd34d",
+      icon: Building2,
+      label: t("residentLabel"),
+      headline: t("residentHeadline"),
+      features: [t("residentF1"), t("residentF2"), t("residentF3"), t("residentF4")],
+      cta: t("residentCta"),
+    },
+  ];
+
+  const BENEFITS = [
+    { icon: BarChart3,   title: t("benefit1Title"), desc: t("benefit1Desc") },
+    { icon: ShieldCheck, title: t("benefit2Title"), desc: t("benefit2Desc") },
+    { icon: Smartphone,  title: t("benefit3Title"), desc: t("benefit3Desc") },
+  ];
+
+  const FEATURES = [
+    { icon: Package,       label: t("feat1") },
+    { icon: Smartphone,    label: t("feat2") },
+    { icon: ClipboardList, label: t("feat3") },
+    { icon: ShieldCheck,   label: t("feat4") },
+  ];
 
   return (
-    <div className="flex flex-col">
-      {/* ── Hero ───────────────────────────────────────────────────── */}
-      <section className="relative flex flex-col items-center justify-center text-center px-6 pt-16 pb-28 min-h-[88vh]">
-        {/* Radial glow background */}
-        <div
-          className="absolute inset-0 flex items-center justify-center pointer-events-none"
-          aria-hidden="true"
-        >
-          <div
-            className="w-[700px] h-[500px] rounded-full"
+    <div className="w-full font-sans bg-[#09090b] text-[#fafafa] selection:bg-[#f59e0b] selection:text-[#09090b] overflow-x-hidden">
+
+      {/* ══════════════════════════════════════
+          SECCIÓN 1 — HERO
+      ══════════════════════════════════════ */}
+      <section className="relative min-h-screen w-full overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/mockups/fondo_1920_x_1080_3.png"
+            alt=""
+            className="w-full h-full"
             style={{
-              background:
-                "radial-gradient(ellipse at center, rgba(99,102,241,0.10) 0%, transparent 70%)",
+              objectFit: "cover",
+              objectPosition: "center top",
+              filter: "brightness(0.9) contrast(1.1) saturate(1.15)",
             }}
+            aria-hidden="true"
           />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#09090b]/95 via-[#09090b]/50 to-[#09090b]/10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#09090b] via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#09090b]/40 via-transparent to-transparent" />
         </div>
 
-        {/* Eyebrow pill */}
-        <div className="relative inline-flex items-center gap-2 border border-indigo-500/20 bg-indigo-500/5 rounded-full px-4 py-1.5 mb-8">
-          <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
-          <span className="text-xs font-semibold text-indigo-300 tracking-widest uppercase">
-            {t('sprintPreview')}
-          </span>
-        </div>
+        <div className="relative z-20 w-full h-screen">
 
-        {/* Headline */}
-        <h1
-          className="relative text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight text-[#f1f0ff] mb-6 leading-[1.08]"
-          style={{ fontFamily: "var(--font-syne)" }}
-        >
-          <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
-            {t('title')}
-          </span>
-        </h1>
+          {/* ── Texto principal ── */}
+          <div className="absolute bottom-[28%] left-[5%] md:left-[7%] max-w-lg">
 
-        {/* Subtitle */}
-        <p className="relative text-xl text-white/50 max-w-md mb-10 leading-relaxed">
-          {t('subtitle')}
-        </p>
+            {/* Eyebrow: tracking-expand — comprimido+blur → espaciado */}
+            <p
+              className={`text-[#fcd34d] text-xs font-semibold uppercase mb-4 ${mounted ? "animate-tracking-expand" : "opacity-0"}`}
+              style={{ animationDelay: "0.12s" }}
+            >
+              {t("eyebrow")}
+            </p>
 
-        {/* CTA buttons */}
-        <div className="relative flex flex-col sm:flex-row items-center gap-3">
-          <Link
-            href="/login"
-            className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-[0_0_24px_rgba(99,102,241,0.35)] hover:bg-indigo-500 transition-all duration-200 cursor-pointer"
+            {/* Título */}
+            <h1
+              className="text-4xl md:text-5xl lg:text-6xl font-light tracking-[0.1em] text-[#fafafa] uppercase leading-[1.1] mb-5 drop-shadow-lg"
+              style={fadeUp(mounted, 220)}
+            >
+              {t("heroTitle1")}<br />
+              <span className="font-bold">{t("heroTitle2")}</span>
+            </h1>
+
+            {/* Descripción */}
+            <p
+              className="text-sm md:text-base text-white/70 font-light leading-relaxed mb-8 max-w-sm"
+              style={fadeUp(mounted, 380)}
+            >
+              {t("heroDesc")}
+            </p>
+
+            {/* CTA con glow pulsante */}
+            <div style={fadeUp(mounted, 500)}>
+              <Link
+                href="/login"
+                className="inline-flex items-center justify-center gap-2.5 bg-[#f59e0b] hover:bg-[#d97706] active:scale-95 text-[#09090b] px-8 py-3.5 rounded-full text-xs font-bold tracking-[0.2em] transition-colors duration-200 uppercase animate-amber-pulse"
+              >
+                <ArrowRight className="w-4 h-4" />
+                {t("heroCta")}
+              </Link>
+            </div>
+          </div>
+
+          {/* ── Feature list ── */}
+          <div
+            className="absolute bottom-5 left-[5%] md:left-[7%] pointer-events-none"
+            style={fadeUp(mounted, 680)}
           >
-            {t('ctaGetStarted')}
-          </Link>
-          <button className="inline-flex items-center justify-center rounded-lg border border-white/10 px-6 py-3 text-sm font-semibold text-white/60 hover:bg-white/[0.05] hover:text-white transition-all duration-200 cursor-pointer">
-            {t('ctaViewDemo')}
-          </button>
+            <ul className="flex flex-wrap gap-x-6 gap-y-2">
+              {FEATURES.map(({ icon: Icon, label }, i) => (
+                <li
+                  key={label}
+                  className="flex items-center gap-2 text-white/50"
+                  style={fadeUp(mounted, 700 + i * 80)}
+                >
+                  <Check className="w-3 h-3 text-[#f59e0b] shrink-0" strokeWidth={3} />
+                  <Icon className="w-3 h-3 text-white/30 shrink-0" strokeWidth={1.5} />
+                  <span className="text-[11px] tracking-wide font-light">{label}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* ── Widget acceso rápido (entra desde la derecha) ── */}
+          <div
+            className="absolute bottom-5 right-[5%] md:right-[7%] pointer-events-auto"
+            style={fadeRight(mounted, 750)}
+          >
+            <Link
+              href="/login?role=CONSERJE"
+              className="bg-black/40 hover:bg-black/60 backdrop-blur-xl border border-white/10 hover:border-[#f59e0b]/40 p-4 pr-10 rounded-2xl flex items-center gap-3 transition-all duration-300 group relative"
+            >
+              <div className="w-9 h-9 rounded-xl bg-[#f59e0b]/10 flex items-center justify-center border border-[#f59e0b]/20 group-hover:bg-[#f59e0b]/20 transition-colors duration-300">
+                <ScanLine className="w-5 h-5 text-[#f59e0b]" strokeWidth={1.5} />
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-white/40 text-[10px] font-light tracking-widest uppercase">{t("quickAccessLabel")}</span>
+                <span className="text-white/90 font-semibold text-xs">{t("quickAccessBtn")}</span>
+              </div>
+              <ArrowRight className="absolute right-3 w-3.5 h-3.5 text-white/30 group-hover:text-[#f59e0b] group-hover:translate-x-0.5 transition-all duration-300" />
+            </Link>
+          </div>
+
         </div>
       </section>
 
-      {/* ── Bento Grid ─────────────────────────────────────────────── */}
-      <section className="px-4 pb-24 max-w-5xl mx-auto w-full">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-          {BENTO_CARDS.map((card) => (
-            <SpotlightCard
-              key={card.titleKey}
-              title={t(card.titleKey)}
-              description={t(card.descKey)}
-              icon={card.icon}
-              badge={card.badgeKey ? t(card.badgeKey) : undefined}
-              className={card.gridClass}
-            />
+      {/* ══════════════════════════════════════
+          SECCIÓN 2 — ESTADÍSTICAS
+      ══════════════════════════════════════ */}
+      <section className="relative z-10 border-t border-white/5 bg-[#18181b]">
+        <div
+          ref={stats.ref}
+          className="max-w-5xl mx-auto px-6 py-12 grid grid-cols-1 sm:grid-cols-3 gap-8 text-center"
+        >
+          {STATS.map(({ value, label }, i) => (
+            <div
+              key={label}
+              className="flex flex-col items-center gap-2"
+              style={fadeUp(stats.inView, i * 120)}
+            >
+              <span className="text-3xl md:text-4xl font-bold text-[#f59e0b]">{value}</span>
+              <span className="text-xs text-[#a1a1aa] tracking-wide max-w-[180px] leading-relaxed">{label}</span>
+            </div>
           ))}
         </div>
       </section>
+
+      {/* ══════════════════════════════════════
+          SECCIÓN 3 — CÓMO FUNCIONA
+      ══════════════════════════════════════ */}
+      <section id="como-funciona" className="bg-[#09090b] py-24 px-6">
+        <div className="max-w-5xl mx-auto" ref={how.ref}>
+
+          {/* Título */}
+          <div className="text-center mb-16" style={fadeUp(how.inView, 0)}>
+            <p className="text-[#f59e0b] text-xs font-semibold tracking-[0.3em] uppercase mb-3">
+              {t("howEyebrow")}
+            </p>
+            <h2 className="text-3xl md:text-4xl font-light text-[#fafafa] tracking-wide">
+              {t("howTitle1")} <span className="font-bold">{t("howTitle2")}</span>?
+            </h2>
+          </div>
+
+          {/* Steps */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+
+            {/* Línea que se "dibuja" de izquierda a derecha */}
+            <div
+              className="hidden md:block absolute top-10 left-[17%] right-[17%] h-px bg-gradient-to-r from-[#f59e0b]/20 via-[#f59e0b]/50 to-[#f59e0b]/20"
+              style={{
+                transformOrigin: "left",
+                transform: how.inView ? "scaleX(1)" : "scaleX(0)",
+                transition: "transform 1.1s ease 0.35s",
+              }}
+            />
+
+            {STEPS.map(({ number, icon: Icon, title, desc }, i) => (
+              <div
+                key={number}
+                className="relative flex flex-col items-center text-center group"
+                style={fadeUp(how.inView, 200 + i * 150)}
+              >
+                <div className="relative mb-6">
+                  <div className="w-20 h-20 rounded-2xl bg-[#18181b] border border-white/5 group-hover:border-[#f59e0b]/30 flex items-center justify-center transition-all duration-500 shadow-lg group-hover:shadow-[0_0_24px_rgba(245,158,11,0.1)]">
+                    <Icon
+                      className="w-8 h-8 text-[#f59e0b]/60 group-hover:text-[#f59e0b] transition-all duration-500 group-hover:scale-110"
+                      strokeWidth={1.5}
+                    />
+                  </div>
+                  <span className="absolute -top-3 -right-3 text-[10px] font-black text-[#f59e0b]/40 tracking-widest">
+                    {number}
+                  </span>
+                </div>
+                <h3 className="text-base font-bold text-[#fafafa] mb-3 tracking-wide">{title}</h3>
+                <p className="text-sm text-[#a1a1aa] leading-relaxed max-w-xs">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════
+          SECCIÓN 4 — PARA QUIÉN ES
+      ══════════════════════════════════════ */}
+      <section id="para-quien" className="bg-[#18181b] py-24 px-6 border-t border-white/5">
+        <div className="max-w-5xl mx-auto" ref={roles.ref}>
+
+          {/* Título */}
+          <div className="text-center mb-16" style={fadeUp(roles.inView, 0)}>
+            <p className="text-[#fcd34d] text-xs font-semibold tracking-[0.3em] uppercase mb-3">
+              {t("rolesEyebrow")}
+            </p>
+            <h2 className="text-3xl md:text-4xl font-light text-[#fafafa] tracking-wide">
+              {t("rolesTitle1")} <span className="font-bold">{t("rolesTitle2")}</span>
+            </h2>
+          </div>
+
+          {/* Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {ROLES.map(({ role, accent, icon: Icon, label, headline, features, cta }, i) => (
+              <div
+                key={role}
+                className="relative bg-[#27272a] border border-white/5 hover:border-white/15 rounded-2xl p-8 flex flex-col gap-6 transition-all duration-500 group overflow-hidden"
+                style={fadeUp(roles.inView, 150 + i * 160)}
+              >
+                {/* Glow ambiental */}
+                <div
+                  className="absolute -top-10 -right-10 w-40 h-40 rounded-full blur-[60px] opacity-[0.08] group-hover:opacity-[0.18] transition-opacity duration-500"
+                  style={{ backgroundColor: accent }}
+                />
+
+                {/* Header */}
+                <div className="flex items-center gap-4">
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center border transition-all duration-500 group-hover:scale-105"
+                    style={{ backgroundColor: `${accent}10`, borderColor: `${accent}25` }}
+                  >
+                    <Icon className="w-6 h-6" style={{ color: accent }} strokeWidth={1.5} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold tracking-[0.25em] uppercase" style={{ color: accent }}>
+                      {label}
+                    </p>
+                    <h3 className="text-lg font-bold text-[#fafafa] leading-tight">{headline}</h3>
+                  </div>
+                </div>
+
+                {/* Features */}
+                <ul className="space-y-3 flex-1">
+                  {features.map((f, fi) => (
+                    <li
+                      key={f}
+                      className="flex items-start gap-3"
+                      style={fadeUp(roles.inView, 250 + i * 160 + fi * 60)}
+                    >
+                      <Check className="w-4 h-4 mt-0.5 shrink-0" style={{ color: accent }} strokeWidth={2.5} />
+                      <span className="text-sm text-[#d4d4d8]">{f}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* CTA */}
+                <Link
+                  href={`/login?role=${role}`}
+                  className="inline-flex items-center gap-2 text-xs font-bold tracking-widest uppercase transition-all duration-300 group/btn w-fit"
+                  style={{ color: accent }}
+                >
+                  {cta}
+                  <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform duration-300" />
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════
+          SECCIÓN 5 — BENEFICIOS
+      ══════════════════════════════════════ */}
+      <section className="bg-[#09090b] py-24 px-6 border-t border-white/5">
+        <div className="max-w-5xl mx-auto" ref={benefits.ref}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {BENEFITS.map(({ icon: Icon, title, desc }, i) => (
+              <div
+                key={title}
+                className="flex flex-col gap-4 group"
+                style={fadeUp(benefits.inView, i * 130)}
+              >
+                <div className="w-10 h-10 rounded-xl bg-[#18181b] border border-white/5 group-hover:border-[#f59e0b]/30 flex items-center justify-center transition-all duration-400 group-hover:bg-[#f59e0b]/5">
+                  <Icon
+                    className="w-5 h-5 text-[#f59e0b] transition-transform duration-400 group-hover:scale-110"
+                    strokeWidth={1.5}
+                  />
+                </div>
+                <h3 className="text-base font-bold text-[#fafafa]">{title}</h3>
+                <p className="text-sm text-[#a1a1aa] leading-relaxed">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════
+          SECCIÓN 6 — CTA FINAL
+      ══════════════════════════════════════ */}
+      <section className="bg-[#18181b] border-t border-white/5 py-24 px-6">
+        <div
+          ref={cta.ref}
+          className="max-w-2xl mx-auto text-center flex flex-col items-center gap-8"
+        >
+          {/* Ícono flotante */}
+          <div
+            className="w-16 h-16 rounded-2xl bg-[#f59e0b]/10 border border-[#f59e0b]/20 flex items-center justify-center animate-float"
+            style={fadeUp(cta.inView, 0)}
+          >
+            <Package className="w-8 h-8 text-[#f59e0b]" strokeWidth={1.5} />
+          </div>
+
+          {/* Texto */}
+          <div style={fadeUp(cta.inView, 120)}>
+            <h2 className="text-3xl md:text-4xl font-light text-[#fafafa] tracking-wide mb-4">
+              {t("ctaTitle1")}<br />
+              <span className="font-bold">{t("ctaTitle2")}</span>
+            </h2>
+            <p className="text-[#a1a1aa] text-sm leading-relaxed">
+              {t("ctaDesc")}
+            </p>
+          </div>
+
+          {/* Botones */}
+          <div
+            className="flex flex-col sm:flex-row gap-4"
+            style={fadeUp(cta.inView, 240)}
+          >
+            <Link
+              href="/login?role=CONSERJE"
+              className="inline-flex items-center justify-center gap-2 bg-[#f59e0b] hover:bg-[#d97706] active:scale-95 text-[#09090b] px-8 py-3.5 rounded-full text-xs font-bold tracking-widest transition-all duration-200 uppercase animate-amber-pulse"
+            >
+              <Package className="w-4 h-4" /> {t("ctaConserje")}
+            </Link>
+            <Link
+              href="/login?role=RESIDENTE"
+              className="inline-flex items-center justify-center gap-2 bg-[#fcd34d]/10 hover:bg-[#fcd34d]/20 border border-[#fcd34d]/20 hover:border-[#fcd34d]/40 text-[#fcd34d] px-8 py-3.5 rounded-full text-xs font-bold tracking-widest transition-all duration-200 uppercase"
+            >
+              <Building2 className="w-4 h-4" /> {t("ctaResidente")}
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="bg-[#09090b] border-t border-white/5 py-8 px-6">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-white/30 text-xs">
+          <span className="font-light tracking-widest uppercase">{t("footerBrand")}</span>
+          <div className="flex items-center gap-6">
+            <Link href="/login" className="hover:text-white transition-colors duration-300">
+              {t("footerLogin")}
+            </Link>
+            <span className="text-white/10">·</span>
+            <span>© {new Date().getFullYear()}</span>
+          </div>
+        </div>
+      </footer>
+
     </div>
   );
 }

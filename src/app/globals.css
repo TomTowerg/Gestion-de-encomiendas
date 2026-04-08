@@ -1,23 +1,97 @@
 @import "tailwindcss";
 
 @theme {
-  /* ── Backgrounds ─────────────────────────────── */
-  --color-bg-base: #080810;
-  --color-bg-surface: #0f0f1a;
+  --color-bg-base: #03050a;
+  --color-bg-surface: #0a0e17;
 
-  /* ── Glass ───────────────────────────────────── */
-  --color-glass-fill: rgba(255, 255, 255, 0.04);
-  --color-glass-border: rgba(255, 255, 255, 0.08);
+  --color-accent-primary: #12bbf0; /* Neon Cyan */
+  --color-accent-glow: rgba(18, 187, 240, 0.4);
 
-  /* ── Accent ──────────────────────────────────── */
-  --color-accent-primary: #6366f1;
-  --color-accent-glow: rgba(99, 102, 241, 0.15);
+  --color-text-primary: #ffffff;
+  --color-text-muted: #8b95a5;
 
-  /* ── Text ────────────────────────────────────── */
-  --color-text-primary: #f1f0ff;
-  --color-text-muted: #6b6a8a;
-
-  /* ── Fonts ───────────────────────────────────── */
   --font-sans: var(--font-inter);
   --font-display: var(--font-syne);
+  --font-serif: var(--font-playfair);
+}
+
+@layer base {
+  body {
+    background-color: var(--color-bg-base);
+    color: var(--color-text-primary);
+    -webkit-font-smoothing: antialiased;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* ─── Keyframes ─────────────────────────────────── */
+
+@keyframes amber-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 32px rgba(245, 158, 11, 0.3),
+      0 0 0px rgba(245, 158, 11, 0);
+  }
+  50% {
+    box-shadow:
+      0 0 56px rgba(245, 158, 11, 0.55),
+      0 0 100px rgba(245, 158, 11, 0.15);
+  }
+}
+
+@keyframes tracking-expand {
+  0% {
+    opacity: 0;
+    letter-spacing: -0.04em;
+    filter: blur(10px);
+  }
+  55% {
+    opacity: 1;
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    letter-spacing: 0.3em;
+    filter: blur(0px);
+  }
+}
+
+@keyframes float-y {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-6px); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ─── Utilities ─────────────────────────────────── */
+
+@layer utilities {
+  .animate-amber-pulse {
+    animation: amber-pulse 3s ease-in-out infinite;
+  }
+  .animate-float {
+    animation: float-y 4s ease-in-out infinite;
+  }
+  .animate-spin-slow {
+    animation: spin-slow 8s linear infinite;
+  }
+  .animate-tracking-expand {
+    animation: tracking-expand 1.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+/* ─── Respeta prefers-reduced-motion ────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
 }
