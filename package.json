@@ -3,10 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "dev": "bun run next dev",
+    "build": "bun run next build",
+    "start": "bun run next start",
+    "lint": "bun run next lint",
+    "db:migrate": "bunx prisma migrate deploy",
+    "db:studio": "bunx prisma studio",
+    "db:generate": "bunx prisma generate"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",

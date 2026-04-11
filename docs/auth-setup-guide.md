@@ -59,19 +59,19 @@ createdb parcel_management_db
 
 ```bash
 # Generar el cliente TypeScript de Prisma
-npx prisma generate
+bunx prisma generate
 
 # Crear y aplicar las migraciones a la Base de Datos
-npx prisma migrate dev --name init
+bunx prisma migrate dev --name init
 
 # (Opcional) Abrir Prisma Studio para inspeccionar visualmente los datos
-npx prisma studio
+bunx prisma studio
 ```
 
 ### 6. Iniciar Servidor de Desarrollo
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 Ingresa a [http://localhost:3000](http://localhost:3000) en tu navegador local. Intentar navegar rudamente a vistas protegidas como `/dashboard/conserje` o `/dashboard/resident` cuando estás sin autenticar te redirigirá instantáneamente hacia la pantalla visual interactiva de login (SSO).
@@ -89,8 +89,8 @@ Ingresa a [http://localhost:3000](http://localhost:3000) en tu navegador local. 
 
 ### Errores del tipo "Cannot find module"
 ```bash
-npm install
-npx prisma generate
+bun install
+bunx prisma generate
 ```
 
 ### Error de compilación por "NEXTAUTH_SECRET is not set"
@@ -100,8 +100,8 @@ npx prisma generate
 ### Fallas conectando a la Base de Datos
 - Revisa si tu entorno PostgreSQL local está inicializado en caso opuesto revisa el consumo del proveedor en la nube.
 - Valida si la anatomía del `DATABASE_URL` coincide exactamente con la requerida por el driver nativo.
-- Si las tablas de migraciones están dando conflictos severos y asincrónicos, purga y resetea haciendo un `npx prisma db push --force-reset` para alinear urgentemente todos sus componentes nuevamente.
+- Si las tablas de migraciones están dando conflictos severos y asincrónicos, purga y resetea haciendo un `bunx prisma db push --force-reset` para alinear urgentemente todos sus componentes nuevamente.
 
 ### Los Roles de mis Usuarios no persisten
 - Asegúrate de certificar que tu base de datos esté reflejando y aceptando todos los Enums nativos; corre `npx prisma migrate status` para inspeccionar errores silenciados por asincronía.
-- Revisa a primera vista con `npx prisma studio` el campo modelo y certifica que la columna "Role" no esté fallando durante inserciones SSO.
+- Revisa a primera vista con `bunx prisma studio` el campo modelo y certifica que la columna "Role" no esté fallando durante inserciones SSO.

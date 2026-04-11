@@ -39,16 +39,36 @@ Sistema de gestión eficiente de paquetes y correspondencia en edificios residen
 - .claude/skills/code-reviewer → estándares de revisión
 
 ## Plan de sprints
-- **Sprint 1 (24–31 mar)**: Setup del proyecto, SSO con 2 roles, base responsive, i18n
-  - Tarea 1: Setup inicial ✓
-  - **Tarea 2: [Auth] SSO login with NextAuth + Google provider** ✅ COMPLETADA (25 mar)
-  - Tarea 3: i18n setup ✅ COMPLETADA (07 abr)
-  - Tarea 4: Responsive design audit ✅ COMPLETADA (07 abr)
-- Sprint 2 (31 mar–7 abr): Registro de encomiendas, base de datos, notificaciones [/] EN PROGRESO
-- Sprint 3 (7–14 abr): Generación y escaneo QR, verificación de retiro
-- Sprint 4 (14–21 abr): Dashboard conserje, filtros, estadísticas
-- Sprint 5 (21–28 abr): Deploy en la nube, CI/CD, pruebas E2E
-- Sprint 6 (28 abr–5 may): Pulido final, preparación demo
+- **Sprint 1 (30 mar – 05 abr): Setup, Auth & UI Base** ✅ COMPLETADO
+  - [i18n] Setup next-intl with ES/EN #6
+  - [Setup] Next.js project structure and CI #1
+  - [Auth] SSO login with NextAuth + Google provider #2
+  - [DB] Prisma schema: Users, Apartments, Packages #4
+  - [UI] Responsive base layout + navbar #5
+  - [Auth] Role system: concierge and resident #3
+- **Sprint 2 (06 abr – 12 abr): Package Management & Notifications** [/] EN PROGRESO (Actual)
+  - [Feature] Package registration form #7
+  - [DB] Extend schema for package tracking #8
+  - [Feature] Push Notifications setup and integration #9
+  - [Feature] Urgent notification for perishable packages #25
+- **Sprint 3 (13 abr – 19 abr): QR & Pickup Flow**
+  - [Feature] QR code generation for packages #10
+  - [Feature] QR scanner implementation #11
+  - [Feature] Package pickup verification flow #12
+  - [Feature] Pickup record: log who retrieved each package #26
+- **Sprint 4 (20 abr – 26 abr): Dashboard & Reporting**
+  - [UI] Concierge Dashboard layout #13
+  - [Feature] Package filtering and search #14
+  - [Feature] Statistics and reporting views #15
+  - [Feature] Claims management for concierge #27
+- **Sprint 5 (27 abr – 03 may): Deployment & Testing**
+  - [Ops] Vercel & Railway deployment setup #16
+  - [Ops] GitHub Actions CI/CD pipeline #17
+  - [Test] E2E testing implementation #18
+- **Sprint 6 (04 may – 10 may): Polish & Handover**
+  - [UI/UX] Final UI polish and animations #19
+  - [Docs] Demo preparation and user documentation #20
+  - [Test] Responsive verification on 3 required breakpoints #28
 
 ## Estructura de carpetas
 src/

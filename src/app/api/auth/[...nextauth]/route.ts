@@ -1,5 +1,6 @@
 import NextAuth, { type NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import EmailProvider from "next-auth/providers/email";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 
@@ -7,10 +8,21 @@ const authOptions: NextAuthOptions = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   adapter: PrismaAdapter(prisma) as any, // @auth/prisma-adapter v2 uses a bundled @auth/core; casting is the standard workaround for next-auth v4 compatibility
   providers: [
+    // ── SSO: Google OAuth 2.0 (RS256 signed id_token) ────────────────────────
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
       allowDangerousEmailAccountLinking: true,
+    }),
+
+    // ── OTP: Email Magic Link (SHA-256 hashed verification token) ────────────
+    // Token is generated with crypto.randomBytes(32), hashed with SHA-256,
+    // stored in VerificationToken table, and sent as a one-time link via email.
+    EmailProvider({
+      server: process.env.EMAIL_SERVER || "",
+      from: process.env.EMAIL_FROM || "noreply@loombox.cl",
+      // Token expires in 10 minutes (600 seconds) for security
+      maxAge: 60 * 10,
     }),
   ],
   pages: {
@@ -19,8 +31,8 @@ const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async signIn({ account }) {
-      // Allow sign in with Google only
-      return account?.provider === "google";
+      // Allow sign in with Google SSO or Email OTP
+      return account?.provider === "google" || account?.provider === "email";
     },
 
     async redirect({ url, baseUrl }) {

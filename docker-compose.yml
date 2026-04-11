@@ -1,0 +1,62 @@
+# ════════════════════════════════════════════════════════════════
+#  Loombox – docker-compose.yml
+#
+#  PURPOSE: Local development / professor evaluation environment.
+#  Supabase remains the production database (see .env DATABASE_URL).
+#
+#  Usage:
+#    Start:   docker-compose up -d
+#    Migrate: docker-compose exec web bunx prisma migrate deploy
+#    Stop:    docker-compose down
+# ════════════════════════════════════════════════════════════════
+
+version: "3.9"
+
+services:
+  # ── PostgreSQL (local dev / evaluation only) ───────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: loombox_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: loombox
+      POSTGRES_PASSWORD: loombox_dev_password
+      POSTGRES_DB: loombox_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U loombox -d loombox_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Next.js Application ────────────────────────────────────────
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+    container_name: loombox_web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # When using docker-compose local DB, override DATABASE_URL here:
+      DATABASE_URL: postgresql://loombox:loombox_dev_password@postgres:5432/loombox_db?sslmode=disable
+      DIRECT_URL: postgresql://loombox:loombox_dev_password@postgres:5432/loombox_db?sslmode=disable
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      EMAIL_SERVER: ${EMAIL_SERVER}
+      EMAIL_FROM: ${EMAIL_FROM}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+    driver: local
