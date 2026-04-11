@@ -133,5 +133,24 @@
     "subtitle": "Optimiza las entregas para cada residente.",
     "ctaGetStarted": "Comenzar",
     "ctaViewDemo": "Ver Demo"
+  },
+  "PackageForm": {
+    "title": "Registrar Nueva Encomienda",
+    "subtitle": "Ingresa los datos del paquete recibido",
+    "trackingCodeLabel": "Código de Seguimiento",
+    "trackingCodePlaceholder": "Ej: CH123456789CL",
+    "apartmentLabel": "Departamento",
+    "apartmentPlaceholder": "Ej: 401",
+    "towerLabel": "Torre",
+    "towerPlaceholder": "Ej: A",
+    "descriptionLabel": "Descripción",
+    "descriptionPlaceholder": "Ej: Caja mediana, frágil",
+    "optional": "opcional",
+    "submitButton": "Registrar Encomienda",
+    "registering": "Registrando...",
+    "successMessage": "Encomienda registrada exitosamente",
+    "trackingLabel": "Tracking",
+    "errorGeneric": "Ocurrió un error al registrar la encomienda",
+    "errorNetwork": "Error de conexión. Verifica tu red e intenta nuevamente"
   }
 }

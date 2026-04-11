@@ -133,5 +133,24 @@
     "subtitle": "Streamline deliveries for every resident.",
     "ctaGetStarted": "Get Started",
     "ctaViewDemo": "View Demo"
+  },
+  "PackageForm": {
+    "title": "Register New Package",
+    "subtitle": "Enter the details of the received package",
+    "trackingCodeLabel": "Tracking Code",
+    "trackingCodePlaceholder": "e.g. CH123456789CL",
+    "apartmentLabel": "Apartment",
+    "apartmentPlaceholder": "e.g. 401",
+    "towerLabel": "Tower",
+    "towerPlaceholder": "e.g. A",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "e.g. Medium box, fragile",
+    "optional": "optional",
+    "submitButton": "Register Package",
+    "registering": "Registering...",
+    "successMessage": "Package registered successfully",
+    "trackingLabel": "Tracking",
+    "errorGeneric": "An error occurred while registering the package",
+    "errorNetwork": "Connection error. Check your network and try again"
   }
 }
