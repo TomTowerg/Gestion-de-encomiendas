@@ -18,12 +18,34 @@ export async function PATCH(
 
   const { id } = await params;
 
+  let body: { receiverName?: string } = {};
   try {
+    body = await request.json();
+  } catch (e) {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  const { receiverName } = body;
+
+  if (!receiverName || receiverName.trim() === "") {
+    return NextResponse.json({ error: "Receiver name is required" }, { status: 400 });
+  }
+
+  try {
+    // We use a transaction or nested writes
     const updatedPackage = await prisma.package.update({
       where: { id },
       data: {
         status: "DELIVERED",
-        // We could add a deliveredAt field if it exists in schema
+        pickedUpAt: new Date(),
+        receiverName: receiverName.trim(),
+        events: {
+          create: {
+            type: "PICKED_UP",
+            notes: `Entregado a: ${receiverName.trim()}`,
+            createdById: token.id as string,
+          }
+        }
       },
     });
 

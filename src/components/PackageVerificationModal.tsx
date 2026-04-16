@@ -44,6 +44,7 @@ export default function PackageVerificationModal({
   const [loading, setLoading] = useState(true);
   const [delivering, setDelivering] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [receiverName, setReceiverName] = useState("");
 
   useEffect(() => {
     const fetchPackage = async () => {
@@ -64,20 +65,31 @@ export default function PackageVerificationModal({
   }, [packageId]);
 
   const handleDeliver = async () => {
+    if (!receiverName.trim()) {
+      setError("Debe ingresar el nombre de la persona que retira");
+      return;
+    }
+
     try {
       setDelivering(true);
+      setError(null);
       const res = await fetch(`/api/packages/${packageId}/deliver`, {
         method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ receiverName }),
       });
       
       if (res.ok) {
         onDeliverySuccess();
         onClose();
       } else {
-        throw new Error("Failed to deliver");
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to deliver");
       }
-    } catch (err) {
-      setError("Error al procesar la entrega");
+    } catch (err: any) {
+      setError(err.message || "Error al procesar la entrega");
     } finally {
       setDelivering(false);
     }
@@ -166,30 +178,49 @@ export default function PackageVerificationModal({
 
               <div className="flex flex-col gap-3">
                 {pkg.status === 'DELIVERED' ? (
-                  <div className="flex items-center justify-center gap-2 py-4 bg-green-50 text-green-700 rounded-2xl border border-green-100 font-bold">
-                    <CheckCircle2 className="w-5 h-5" />
-                    Ya ha sido entregado
-                  </div>
-                ) : (
                   <button
-                    onClick={handleDeliver}
-                    disabled={delivering}
-                    className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl shadow-xl shadow-indigo-100 transition-all hover:scale-[1.02] active:scale-98 flex items-center justify-center gap-3 disabled:opacity-50"
+                    onClick={onClose}
+                    className="w-full flex items-center justify-center gap-2 py-4 bg-green-50 hover:bg-green-100 text-green-700 rounded-2xl border border-green-200 font-bold transition-colors cursor-pointer"
                   >
-                    {delivering ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <CheckCircle2 className="w-5 h-5" />
-                    )}
-                    CONFIRMAR ENTREGA
+                    <CheckCircle2 className="w-5 h-5" />
+                    Ya ha sido entregado (Cerrar)
                   </button>
+                ) : (
+                  <>
+                    <div className="flex flex-col gap-1 mb-2">
+                      <label htmlFor="receiverName" className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        Nombre de quien retira
+                      </label>
+                      <input
+                        type="text"
+                        id="receiverName"
+                        value={receiverName}
+                        onChange={(e) => { setReceiverName(e.target.value); setError(null); }}
+                        placeholder="Ej: Juan Pérez"
+                        className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow text-slate-800"
+                        disabled={delivering}
+                      />
+                    </div>
+                    <button
+                      onClick={handleDeliver}
+                      disabled={delivering || !receiverName.trim()}
+                      className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl shadow-xl shadow-indigo-100 transition-all hover:scale-[1.02] active:scale-98 flex items-center justify-center gap-3 disabled:opacity-50 disabled:pointer-events-none"
+                    >
+                      {delivering ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="w-5 h-5" />
+                      )}
+                      CONFIRMAR ENTREGA
+                    </button>
+                  </>
                 )}
                 
                 <button
                   onClick={onClose}
                   className="w-full py-4 bg-white text-slate-400 hover:text-slate-600 font-bold rounded-2xl transition-colors text-sm"
                 >
-                  Cancelar
+                  {pkg.status === 'DELIVERED' ? 'Cerrar' : 'Cancelar'}
                 </button>
               </div>
             </div>
