@@ -20,7 +20,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Parcel Management System",
+  title: "Loombox",
   description:
     "Efficient parcel and correspondence management for residential buildings.",
 };
