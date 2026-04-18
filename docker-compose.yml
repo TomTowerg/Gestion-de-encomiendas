@@ -42,18 +42,15 @@ services:
     ports:
       - "3000:3000"
     environment:
-      # When using docker-compose local DB, override DATABASE_URL here:
-      DATABASE_URL: postgresql://loombox:loombox_dev_password@postgres:5432/loombox_db?sslmode=disable
-      DIRECT_URL: postgresql://loombox:loombox_dev_password@postgres:5432/loombox_db?sslmode=disable
+      # Supabase – read from .env (pooler for queries, direct for migrations)
+      DATABASE_URL: ${DATABASE_URL}
+      DIRECT_URL: ${DIRECT_URL}
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       EMAIL_SERVER: ${EMAIL_SERVER}
       EMAIL_FROM: ${EMAIL_FROM}
-    depends_on:
-      postgres:
-        condition: service_healthy
 
 volumes:
   postgres_data:
