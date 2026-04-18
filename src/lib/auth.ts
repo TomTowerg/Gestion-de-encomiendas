@@ -1,9 +1,17 @@
 import { type NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import EmailProvider from "next-auth/providers/email";
+import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
+import bcrypt from "bcrypt";
+import { loginSchema } from "@/lib/validations/auth";
+import {
+  checkLoginRateLimit,
+  recordFailedLogin,
+  clearLoginRateLimit,
+} from "@/lib/rate-limit";
 
 /**
  * Central NextAuth configuration.
@@ -19,20 +27,59 @@ export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
 
   providers: [
-    // ── SSO: Google OAuth 2.0 (RS256 signed id_token) ────────────────────────
+    // ── SSO: Google OAuth 2.0 ────────────────────────────────────────────────
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
       allowDangerousEmailAccountLinking: true,
     }),
 
-    // ── OTP: Email Magic Link (SHA-256 hashed verification token) ────────────
-    // Token is generated with crypto.randomBytes(32), hashed with SHA-256,
-    // stored in VerificationToken table, and sent as a one-time link via email.
+    // ── OTP: Email Magic Link ────────────────────────────────────────────────
     EmailProvider({
       server: process.env.EMAIL_SERVER || "",
       from: process.env.EMAIL_FROM || "noreply@loombox.cl",
-      maxAge: 60 * 10, // Token expires in 10 minutes
+      maxAge: 60 * 10,
+    }),
+
+    // ── Email + Password ─────────────────────────────────────────────────────
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+        role: { label: "Role", type: "text" },
+      },
+      async authorize(credentials) {
+        const parsed = loginSchema.safeParse(credentials);
+        if (!parsed.success) return null;
+
+        const { email, password, role } = parsed.data;
+
+        // Brute-force protection: 5 attempts → 15-min lockout
+        const rateCheck = checkLoginRateLimit(email);
+        if (rateCheck.locked) return null;
+
+        const user = await prisma.user.findUnique({ where: { email } });
+
+        // Generic message — don't reveal whether the email exists
+        if (!user || !user.password) {
+          recordFailedLogin(email);
+          return null;
+        }
+
+        const valid = await bcrypt.compare(password, user.password);
+        if (!valid) {
+          recordFailedLogin(email);
+          return null;
+        }
+
+        clearLoginRateLimit(email);
+
+        // Persist the role chosen on the login screen
+        await prisma.user.update({ where: { email }, data: { role } });
+
+        return { id: user.id, email: user.email!, name: user.name, role };
+      },
     }),
   ],
 
@@ -43,8 +90,9 @@ export const authOptions: NextAuthOptions = {
 
   callbacks: {
     async signIn({ account }) {
-      // Allow sign in with Google SSO or Email OTP
-      return account?.provider === "google" || account?.provider === "email";
+      const allowed = ["google", "email", "credentials"];
+      // account is null for credentials in some NextAuth builds — allow it
+      return allowed.includes(account?.provider ?? "credentials");
     },
 
     async redirect({ url, baseUrl }) {
@@ -54,14 +102,11 @@ export const authOptions: NextAuthOptions = {
     },
 
     async jwt({ token, user }) {
-      // 1. On initial sign-in, user object is available
       if (user) {
         token.id = user.id;
         token.role = user.role;
       }
 
-      // 2. Always fetch the latest role and apartment from the database 
-      // to ensure the session is always in sync.
       if (token.id) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
@@ -72,30 +117,25 @@ export const authOptions: NextAuthOptions = {
             onboardingComplete: true,
             totpEnabled: true,
             trustedDevices: {
-              where: { expiresAt: { gt: new Date() } }
-            }
+              where: { expiresAt: { gt: new Date() } },
+            },
           },
         });
+
         if (dbUser) {
           token.role = dbUser.role;
           token.apartment = dbUser.apartment;
           token.onboardingComplete = dbUser.onboardingComplete;
           token.totpEnabled = dbUser.totpEnabled;
 
-          // Check trusted device or explicit verification
           const cookieStore = await cookies();
           const trustedCookie = cookieStore.get("loombox_trusted_device")?.value;
-
-          let isTrusted = false;
-          if (trustedCookie && dbUser.trustedDevices.some(td => td.token === trustedCookie)) {
-            isTrusted = true;
-          }
+          const isTrusted =
+            !!trustedCookie &&
+            dbUser.trustedDevices.some((td) => td.token === trustedCookie);
 
           const otpSession = await prisma.otpSession.findFirst({
-            where: {
-              userId: dbUser.id,
-              expiresAt: { gt: new Date() }
-            }
+            where: { userId: dbUser.id, expiresAt: { gt: new Date() } },
           });
 
           token.otpVerified = isTrusted || !!otpSession;
@@ -106,7 +146,6 @@ export const authOptions: NextAuthOptions = {
     },
 
     async session({ session, token }) {
-      // Surface id, role, and apartment to the client session object
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as import("@prisma/client").UserRole;

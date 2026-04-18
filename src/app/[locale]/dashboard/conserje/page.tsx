@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import PackageRegistrationForm from "@/components/PackageRegistrationForm";
 import QRScanner from "@/components/QRScanner";
 import PackageVerificationModal from "@/components/PackageVerificationModal";
+import ApartmentManager from "@/components/ApartmentManager";
 import { Loader2, LogOut, Package, Clock, CheckCircle2, History, User, QrCode } from "lucide-react";
 
 interface PackageData {
@@ -218,6 +219,9 @@ export default function ConciergeDashboard() {
             <PackageRegistrationForm onSuccess={fetchPackages} />
           </div>
         </div>
+
+        {/* Apartment Management */}
+        <ApartmentManager />
 
         {/* Scanner Overlay */}
         {isScanning && (

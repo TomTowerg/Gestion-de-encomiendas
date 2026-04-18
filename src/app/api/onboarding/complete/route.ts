@@ -21,14 +21,13 @@ export async function POST(req: Request) {
 
     if (!result.success) {
       return NextResponse.json(
-        { error: "Invalid data", details: result.error.format() },
+        { error: "Invalid data", details: result.error.issues },
         { status: 400 }
       );
     }
 
     const { role, apartmentId } = result.data;
 
-    // Validate residency scenario
     if (role === "RESIDENTE" && !apartmentId) {
       return NextResponse.json(
         { error: "Apartment selection is required for residents" },
@@ -36,7 +35,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Update user
     const updatedUser = await prisma.user.update({
       where: { email: session.user.email },
       data: {
@@ -55,7 +53,7 @@ export async function POST(req: Request) {
         onboardingComplete: updatedUser.onboardingComplete,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error completing onboarding:", error);
     return NextResponse.json(
       { error: "Internal server error" },

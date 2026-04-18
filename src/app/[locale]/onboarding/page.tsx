@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function OnboardingPage() {
   const [apartments, session] = await Promise.all([
-    prisma.apartment.findMany({ orderBy: { number: 'asc' } }),
+    prisma.apartment.findMany({ orderBy: { number: "asc" } }),
     getServerSession(authOptions),
   ]);
 
