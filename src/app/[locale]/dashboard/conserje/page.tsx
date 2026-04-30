@@ -228,6 +228,7 @@ export default function ConciergeDashboard() {
               fetchPackages(); // Refresh the list
             }}
           />
+        )}
     </div>
   );
 }
